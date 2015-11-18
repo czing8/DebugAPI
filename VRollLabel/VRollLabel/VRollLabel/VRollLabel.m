@@ -24,6 +24,7 @@
     if (self) {
         self.showsVerticalScrollIndicator   = NO;
         self.showsHorizontalScrollIndicator = NO;   //水平滚动条
+        
         self.font = [UIFont systemFontOfSize:14];
         self.textColor = [UIColor blackColor];
         
