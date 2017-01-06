@@ -1,0 +1,372 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <title>Debug API</title>
+    <style>
+    input[type=text] {
+        width: 300px;
+    }
+    </style>
+    <script src="jquery.js"></script>
+</head>
+
+<body>
+    <p><b>开发环境： </b>
+        <select id="env" name='env'>
+            <option value='null'>开发环境</option>
+            <option value='null'>正式环境</option>
+        </select>
+        <br/>
+    </p>
+    <p><b>客户端： </b>
+        <select name="platform" id="platform" class="myParameter">
+            <option value="ios">iOS</option>
+            <option value="android">Android</option>
+        </select>
+    </p>
+    <p><b>API： </b>
+        <select name="api" id="api" style="font-size:14px;">
+            <option value="">-- 请选择 --</option>
+            <optgroup label="用户相关">
+                <option value="Mobile/RegisterUser">Mobile/RegisterUser - 用户注册</option>
+                <option value="Mobile/UserLogin">Mobile/UserLogin - 用户登录</option>
+                <option value="Mobile/ThirdLogin">Mobile/ThirdLogin - 三方登录</option>
+                <option value="Mobile/ThirdRegister">Mobile/ThirdRegister - 三方绑定</option>
+                <option value="Mobile/SendCode">Mobile/SendCode - 发送验证码</option>
+                <option value="Mobile/EditPassSendCode">Mobile/EditPassSendCode - 发送验证码（忘记密码专用）</option>
+                <option value="Mobile/EditUserPass">Mobile/EditUserPass - 忘记密码</option>
+                <option value="Mobile/"> 登录状态的修改密码（暂无）</option>
+                <option value="Mobile/UserProfileGet">Mobile/UserProfileGet - 获取用户概要信息</option>
+                <option value="Mobile/UserGetUid">Mobile/UserGetUid - 获取用户基本信息</option>
+                <option value="Mobile/EditUder">Mobile/EditUder - 编辑用户信息</option>
+                <option value="Mobile/UserIMGUpate">Mobile/UserIMGUpate - 上传头像</option>
+                <option value="Mobile/PushGetPage">Mobile/PushGetPage - 用户推送信息列表</option>
+                <option value="Mobile/PushGetID">Mobile/PushGetID - 返回单条推送</option>
+                <option value="Mobile/AddFollow">Mobile/AddFollow - 添加关注</option>
+                <option value="Mobile/DelFollow">Mobile/DelFollow - 取消关注</option>
+                <option value="Mobile/FollowToGetPage">Mobile/FollowToGetPage - 获取关注列表</option>
+                <option value="Mobile/AddFans">Mobile/AddFans - 添加粉丝</option>
+                <option value="Mobile/FansToGetPage">Mobile/FansToGetPage - 获取粉丝列表</option>
+                <option value="Mobile/CollectionTypePage">Mobile/CollectionTypePage - 我的收藏</option>
+                <option value="Mobile/AddFeedback">Mobile/AddFeedback - 意见反馈</option>
+            </optgroup>
+            <optgroup label="视频相关">
+                <option value="Mobile/CosSigGet">Mobile/CosSigGet - 获取sig</option>
+                <option value="Mobile/AvRoomGet">Mobile/AvRoomGet - 获取房间号</option>
+                <option value="Mobile/AddVideoMain">Mobile/AddVideoMain - 上传录制信息</option>
+                <option value="Mobile/GetTBPpliveList">Mobile/GetTBPpliveList - 主页视频列表</option>
+            </optgroup>
+        </select>
+
+        <em> &nbsp;&nbsp;&nbsp;&nbsp;</em>
+        <b>method： </b>
+        <select name="requestMethod" id="requestMethod" class="myParameter">
+            <option value="get">get</option>
+            <option value="post">post</option>
+        </select>
+    </p>
+
+    <form name="form" action="" id="form" method="get" target="_blank">
+        <!-- 签名占位符  -->
+        <!-- <input type="hidden" name="sign" id="sign"/> -->
+        <!-- 客户端版本号,暂时不开放出来  -->
+        <!-- <input type="hidden" name="v" value="1.0" /> -->
+        <!-- <h3>版本号</h3> -->
+        <!-- <input type="text" name="v" id="v" value="1.0" class="myParameter" /> -->
+        <p id="desc"></p>
+        <h3>输入参数说明</h3>
+        <table style="width:90%" border="1">
+            <thead>
+                <tr>
+                    <td> 参数中文名称</td>
+                    <td> 类型</td>
+                    <td> 描述</td>
+                    <td> 参数名</td>
+                    <td> 值</td>
+                </tr>
+            </thead>
+            <tbody id="parameters"></tbody>
+        </table>
+        <p>
+            <input type="submit" style="font-size:14px;" id="submit" value=" 确定 " />
+        </p>
+        <h3> 输出字段说明 </h3>
+        <!--         <table style="" border="1">
+            <thead>
+                <tr>
+                    <td> 字段中文名称</td>
+                    <td> 类型</td>
+                    <td> 描述</td>
+                    <td> 字段名</td>
+                </tr>
+            </thead>
+            <tbody id="fields">
+            </tbody>
+        </table> -->
+    </form>
+    <script type="text/javascript">
+    $(function() {
+
+        $("#requestMethod").change(function() {
+            var requestMethod = $("#requestMethod").val();
+            $("#form").attr("method", requestMethod);
+        });
+
+        // 参数提醒
+        $("#api").change(function() {
+            var api_selected = $("#api").val();
+            var baseURL = $("#env").val();   // document.getElementById("env").value;
+
+            $("#form").attr("action", baseURL + '/' + api_selected);
+
+            $("#parameters").empty();
+
+            if (api_selected == 'Mobile/RegisterUser') {
+                $("#desc").html("接口说明：注册接口。");
+                var paramter_tr = '<tr><th>用户名</th><td>字符串</td><td>字符串（字母、数字）、DES加密</td><td>mobile</td><td><input type="text" id="username" name="mobile" placeholder="DES加密后的字符串" class="myParameter" required/></td></tr>';
+                paramter_tr += '<tr><th>密码</th><td>字符串</td><td>用户密码、DES加密</td><td>upass</td><td><input type="text" id="password" name="upass" placeholder="DES加密后的字符串" class="myParameter" required/></td></tr>';
+
+                $("#parameters").html(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>成功注册后的用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+
+            if (api_selected == 'Mobile/UserLogin') {
+                $("#desc").html("接口说明：用户登录接口。");
+                var paramter_tr = '<tr><th>手机号</th><td>字符串</td><td>手机号(DES加密)</td><td>mobile</td><td><input type="text" name="mobile" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+                paramter_tr += '<tr><th>密码</th><td>字符串</td><td>用户密码(DES加密)</td><td>upass</td><td><input type="text" name="upass" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+
+            if (api_selected == "Mobile/ThirdLogin") {
+                $("#desc").html("接口说明: 三方登录。");
+                var paramter_tr = '<tr><th>三方ID</th><td>整型</td><td>三方登录后返回的唯一标示</td><td>ThirdId</td><td><input type="text" id="u" name="ThirdId" placeholder="DES加密后的字符串" class="myParameter" required/></td></tr>';
+
+                paramter_tr += '<tr><th>平台类型</th><td>字符串</td><td>平台类型{1,2,3}</td><td>itype</td><td><input type="text" name="itype" value="1" class="myParameter" /></td></tr>';
+
+                $("#parameters").html(paramter_tr);
+
+                var field_tr = '';
+                field_tr += '<tr><td>结果</td><td>数组</td><td>用户信息数组</td><td>userInfo</td></tr>';
+                $("#fields").html(field_tr);
+            }
+
+
+            if (api_selected == "Mobile/ThirdRegister") {
+                $("#desc").html("接口说明: 三方绑定。");
+
+                var paramter_tr = '<tr><th>三方ID</th><td>字符串</td><td>三方登录后返回的唯一标示</td><td>ThirdId</td><td><input type="text" id="ThirdId" name="ThirdId" placeholder="DES加密后的字符串" class="myParameter" required/></td></tr>';
+
+                paramter_tr += '<tr><th>平台类型</th><td>字符串</td><td>平台类型{1,2,3}</td><td>itype</td><td><input type="text" name="itype" value="1" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>手机号</th><td>字符串</td><td>手机号(DES加密)</td><td>mobile</td><td><input type="text" name="mobile" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>密码</th><td>字符串</td><td>用户密码(DES加密)</td><td>upass</td><td><input type="text" name="upass" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>验证码</th><td>字符串</td><td>验证码</td><td>ycode</td><td><input type="text" name="ycode" value="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>昵称</th><td>字符串</td><td>三方返回的数据</td><td>Nickname</td><td><input type="text" name="Nickname" value="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>性别</th><td>字符串</td><td>三方返回的数据</td><td>Sex</td><td><input type="text" name="Sex" value="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>头像</th><td>字符串</td><td>三方返回的数据URL</td><td>avatar</td><td><input type="text" name="avatar" value="" class="myParameter" /></td></tr>';
+
+                $("#parameters").html(paramter_tr);
+
+                var field_tr = '';
+                field_tr += '<tr><td>结果</td><td>数组</td><td>用户信息数组</td><td>userInfo</td></tr>';
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/SendCode') {
+                $("#desc").html("接口说明：发送验证码。");
+                var paramter_tr = '<tr><th>手机号</th><td>字符串</td><td>手机号(DES加密)</td><td>mobile</td><td><input type="text" name="mobile" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/EditPassSendCode') {
+                $("#desc").html("接口说明：发送验证码（忘记密码专用）。");
+                var paramter_tr = '<tr><th>手机号</th><td>字符串</td><td>手机号(DES加密)</td><td>mobile</td><td><input type="text" name="mobile" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/EditUserPass') {
+                $("#desc").html("接口说明：找回密码（忘记密码流程）。");
+                var paramter_tr = '<tr><th>手机号</th><td>字符串</td><td>手机号(DES加密)</td><td>phone</td><td><input type="text" name="phone" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>新密码</th><td>字符串</td><td>新密码(DES加密)</td><td>pass</td><td><input type="text" name="pass" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>验证码</th><td>字符串</td><td>验证码</td><td>code</td><td><input type="text" name="ycode" value="" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+
+            if (api_selected == 'Mobile/UserProfileGet') {
+                $("#desc").html("接口说明：获取用户概要信息，个人中心首页用。");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/UserGetUid') {
+                $("#desc").html("接口说明：获取用户基本信息，信息编辑页用。");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/EditUder') {
+                $("#desc").html("接口说明：编辑用户信息，以修改昵称做例子。修改头像例外，用单独的上传接口UserIMGUpate。");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+// @
+                paramter_tr += '<tr><th>key字段</th><td>字符串</td><td>key字段（"Avatar", "Nickname", "Sex", "Synopsis", “Industry”， "Company", "Position", “City”）</td><td>Nickname</td><td><input type="text" name="Nickname" value="Benny" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>key对应的序号</th><td>字符串</td><td>1，2……8</td><td>itype</td><td><input type="text" name="itype" value="2" class="myParameter" /></td></tr>';
+
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+
+            if (api_selected == 'Mobile/UserIMGUpate') {
+                $("#desc").html("接口说明：上传头像。");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>base64转码后的字符串</th><td>字符串</td><td>base64转码后的字符串</td><td>imgobj</td><td><input type="text" name="imgobj" placeholder="base64转码后的字符串" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+
+
+            if (api_selected == 'Mobile/FollowToGetPage') {
+                $("#desc").html("接口说明：获取关注列表");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>分页页码</th><td>字符串</td><td>页码</td><td>page</td><td><input type="text" name="page" placeholder="" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/CollectionTypePage') {
+                $("#desc").html("接口说明：获取关注列表");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>类型</th><td>字符串</td><td>3种收藏类型{1，2，3}</td><td>type</td><td><input type="text" name="type" placeholder="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>分页页码</th><td>字符串</td><td>页码</td><td>page</td><td><input type="text" name="page" placeholder="" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/AddFeedback') {
+                $("#desc").html("接口说明：意见反馈");
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>标题</th><td>字符串</td><td>反馈标题</td><td>title</td><td><input type="text" name="title" placeholder="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>内容</th><td>字符串</td><td>反馈内容</td><td>content</td><td><input type="text" name="content" placeholder="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>联系方式</th><td>字符串</td><td>联系方式</td><td>contact</td><td><input type="text" name="contact" placeholder="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>名字</th><td>字符串</td><td>反馈人</td><td>plateName</td><td><input type="text" name="plateName" placeholder="" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+
+
+            if (api_selected == 'Mobile/AddVideoMain') {
+                
+                $("#desc").html("接口说明：上传录制信息。");
+
+                var paramter_tr = '<tr><th>uid</th><td>字符串</td><td>DES加密</td><td>uid</td><td><input type="text" name="uid" placeholder="DES加密后的字符串" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>文件id</th><td>字符串</td><td>腾讯云返回的文件id</td><td>vid</td><td><input type="text" name="vid" placeholder="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>录制文件名</th><td>字符串</td><td>自己设定的文件名</td><td>fileName</td><td><input type="text" name="fileName" placeholder="" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>房间名</th><td>字符串</td><td>录制所在的房间名</td><td>homeName</td><td><input type="text" name="homeName" placeholder="" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+            if (api_selected == 'Mobile/GetTBPpliveList') {
+                $("#desc").html("接口说明：主页列表。");
+
+                var paramter_tr = '<tr><th>hiborId</th><td>字符串</td><td>同uid，不用des加密</td><td>hiborId</td><td><input type="text" name="hiborId" value="353065" class="myParameter" /></td></tr>';
+
+                paramter_tr += '<tr><th>分页页码</th><td>字符串</td><td>页码</td><td>page</td><td><input type="text" name="page" value="1" class="myParameter" /></td></tr>';
+
+                $("#parameters").append(paramter_tr);
+
+                var field_tr = '<tr><th>用户ID</th><td>整型</td><td>用户ID</td><td>user_id</td>';
+
+                $("#fields").html(field_tr);
+            }
+
+        });
+    });
+    </script>
+</body>
+
+</html>
